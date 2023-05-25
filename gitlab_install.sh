@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# This script installs GitLab on a Ubuntu.
+# This script updates the system, installs GitLab on Ubuntu by installing and configuring dependencies, adding the GitLab package repository, and installing the GitLab-EE package, and displays the IP address and initial root password for accessing GitLab.
 
 sudo apt update
 

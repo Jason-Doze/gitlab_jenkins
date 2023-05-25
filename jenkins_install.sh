@@ -1,15 +1,15 @@
 #!/bin/bash
 
-# This script installs Jenkins on a Ubuntu.
+# This script updates the system, installs Java (OpenJDK 11), and then installs Jenkins on Ubuntu by adding the Jenkins repository key, adding the Jenkins repository to the package sources, and installing the Jenkins package. It also displays the IP address and initial admin password for accessing Jenkins.
 
 sudo apt update
 
-# Install Java openjdk
+# Install Java 
 if ( dpkg -l openjdk-11-jre > /dev/null )
 then
-  echo -e "\n\033[1;32m==== Openjdk installed ====\033[0m\n"
+  echo -e "\n\033[1;32m==== Java installed ====\033[0m\n"
 else
-  echo -e "\n\033[1;33m==== Installing Openjdk ====\033[0m\n"
+  echo -e "\n\033[1;33m==== Installing Java ====\033[0m\n"
   sudo apt update
   sudo apt install -y openjdk-11-jre
 fi
