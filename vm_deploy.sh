@@ -1,22 +1,20 @@
 #!/bin/bash
 
-# This script automates the installation of GitLab on PI.
+# This script automates the installation of GitLab-Jenkins scripts on a Multipass VM from MacOS, including the installation of dependencies, setting up the VM, transferring files, executing install scripts, and SSH into the VM.
 
-sudo apt update
-
-# Install Snap
-if ( which snap > /dev/null )
+# Install homebrew
+if ( which brew > /dev/null )
 then 
-  echo -e "\n\033[1;32m==== Snap installed ====\033[0m\n"
+  echo -e "\n\033[1;32m==== Brew installed ====\033[0m\n"
 else
-  echo -e "\n\033[1;33m==== Installing Snap ====\033[0m\n"
-  sudo apt install snapd
+  echo -e "\n\033[1;33m==== Installing brew ====\033[0m\n"
+  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 fi
 
 # Install Rsync
 if ( which rsync > /dev/null)
 then 
-   echo -e "\n\033[1;32m==== Rsync installed ====\033[0m\n"
+  echo -e "\n\033[1;32m==== Rsync installed ====\033[0m\n"
 else
   echo -e "\n\033[1;33m==== Installing Rsync ====\033[0m\n"
 fi
@@ -27,7 +25,16 @@ then
   echo -e "\n\033[1;32m==== Multipass installed ====\033[0m\n"
 else
   echo -e "\n\033[1;33m==== Installing Multipass ====\033[0m\n"
-  sudo snap install multipass
+  brew install --cask multipass
+fi
+
+# Set Multipass local driver to Qemu
+if [ "$(multipass get local.driver)" = "qemu" ]
+then
+  echo -e "\n\033[1;32m==== Qemu local driver set ====\033[0m\n"
+else
+  echo -e "\n\033[1;33m==== Setting Qemu as Multipass local driver ====\033[0m\n"
+  multipass set local.driver=qemu
 fi
 
 # Create an SSH key pair
@@ -39,7 +46,7 @@ else
   ssh-keygen -t ed25519 -N '' -f ./id_ed25519
 fi
 
-# Write out cloud-init yaml file to create for user and keys
+# Write out cloud-init.yaml
 if [ -f cloud-init.yaml ]
 then 
   echo -e "\n\033[1;32m==== Cloud-init.yaml present  ====\033[0m\n"
@@ -62,15 +69,15 @@ then
   echo -e "\n\033[1;32m==== Relativepath VM present ====\033[0m\n"
 else 
   echo -e "\n\033[1;33m==== Creating relativepath VM ====\033[0m\n"
-  multipass launch --cpus 4 --memory 3G --disk 50G --name relativepath --cloud-init cloud-init.yaml
+  multipass launch --cpus 4 --memory 7G --disk 50G --name relativepath --cloud-init cloud-init.yaml
 fi
 
 echo -e "\n\033[1;32m==== Transferring files to VM ====\033[0m\n"
 rsync -av -e "ssh -o StrictHostKeyChecking=no -i ./id_ed25519" --delete --exclude={'id_ed25519','id_ed25519.pub','cloud-init.yaml'} "$(pwd)" "relativepath@$(multipass info relativepath | grep IPv4 | awk '{ print $2 }'):/home/$USER" 
 
 # Use SSH to execute commands on the remote VM
-echo -e "\n\033[1;32m==== Executing install script ====\033[0m\n"
-ssh -o StrictHostKeyChecking=no -i ./id_ed25519 "$USER@$(multipass info relativepath | grep IPv4 | awk '{ print $2 }') 'cd relativepath_leveltwo && bash gitlab_install.sh'"
+echo -e "\n\033[1;32m==== Execute install scripts on VM ====\033[0m\n"
+ssh -o StrictHostKeyChecking=no -i ./id_ed25519 "$USER@$(multipass info relativepath | grep IPv4 | awk '{ print $2 }') 'cd gitlab_jenkins && bash gitlab_install.sh'"
 
 # SSH into VM
 echo -e "\n\033[1;32m==== SSH into VM ====\033[0m\n"
